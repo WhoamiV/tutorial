@@ -14,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import os
 import re
 
-code_login = True #True扫码  False账号密码
+code_login = True
 time_out = 60
 poll_frequency = 0.1
 requery = True
@@ -49,7 +49,7 @@ def get_citylist_from_12306():
 # 下载所有的车次数据  保存为 train_list.txt文件
 def get_train_list():
     requests.adapters.DEFAULT_RETRIES = 5
-    response = requests.get('https://kyfw.12306.cn/otn/resources/js/query//train_list.js?scriptVersion=1.0', stream=True, verify=False)
+    response = requests.get('https://kyfw.12306.cn/otn/resources/js/query/train_list.js', stream=True, verify=False)
     status = response.status_code
     if status == 200:
         with open('./config/train_list.txt', 'wb') as of:
@@ -57,7 +57,7 @@ def get_train_list():
                 if chunk:
                     of.write(chunk)
 
-def get_train_no(train_code):
+def get_train_no(train_code,train_date):
     c = list(train_code)[0]
     with open('./config/train_list.txt', 'rb') as of:
         text = of.readline()
@@ -65,8 +65,8 @@ def get_train_no(train_code):
         ss = tt.replace('var train_list =','').replace("},{", "},\n{")
 
         d = json.loads(ss)
-        date = '2019-07-16'
-        for k in d[date][c]:
+
+        for k in d[train_date][c]:
             if k['station_train_code'].find(train_code+'(')>-1:
                 return k['train_no']
 
@@ -129,34 +129,25 @@ def query_ticket_or_requery(driver):
     while not check_query_ticket_success(driver):
         click_query_ticket(driver)
 
-    TRAIN_NO_TAIL=['00','01','02','03','04','05','06','07','08','09','0A','0B','0C','0D','0F']
-    findTrainNo = False
-    for tail in TRAIN_NO_TAIL:
-        if findTrainNo:#已经找到了，退出循环
-            break
-        trainNo = train_no[:-2]+tail
-        try:
-            tr = driver.find_element_by_id("ticket_"+trainNo)
-            print_t("找到车次: " + trainNo)
-            row_list =[td.text for td in tr.find_elements_by_xpath('./td')]
-            print_t(row_list)
-            if len(row_list) > 0:
-                train_code = row_list[0].split('\n')[0]
-                print_t(train_code)
-                if train_code == ticket_12306_config_dict['train_code']:
-                    for seat in ticket_12306_config_dict['train_seat']:
-                        print_t(seat)
-                        if has_seat(row_list, seat_no[seat]):
-                            requery = False
+    try:
+        tr = driver.find_element_by_id("ticket_"+train_no)
+        row_list =[td.text for td in tr.find_elements_by_xpath('./td')]
+        print_t(row_list)
+        if len(row_list) > 0:
+            train_code = row_list[0].split('\n')[0]
+            print_t(train_code)
+            if train_code == ticket_12306_config_dict['train_code']:
+                for seat in ticket_12306_config_dict['train_seat']:
+                    print_t(seat)
+                    if has_seat(row_list, seat_no[seat]):
+                        requery = False
 
-                            tr.find_element_by_xpath('./td/a').click()
-                            print_t("查票成功跳转到购买页")
-                            findTrainNo = True
-                            break
-        except Exception as e:
-            if isinstance(e,NoSuchElementException):
-                print_t("没有找到 "+trainNo)
-                # print_t("没有找到该车次，可能该车次已经停售，系统将继续尝试，你可以Ctrl C退出选择其他车次")
+                        tr.find_element_by_xpath('./td/a').click()
+                        print_t("查票成功跳转到购买页")
+                        break
+    except Exception as e:
+        if isinstance(e,NoSuchElementException):
+            print_t("没有找到该车次，可能该车次已经停售，系统将继续尝试，你可以Ctrl C退出选择其他车次")
 
     if requery:
         print_t('没有票，将再次发起查询')
@@ -217,7 +208,7 @@ if __name__ == '__main__':
         get_train_list()
         print_t('下载当前12306全部车次信息，50M左右，下载完成')
 
-    train_no = get_train_no(ticket_12306_config_dict['train_code'])
+    train_no = get_train_no(ticket_12306_config_dict['train_code'],ticket_12306_config_dict['travel_date'].replace('\'',''))
     if not train_no:
         print_t('你当前要购买的车次不存在，无法购买，系统将退出')
 
@@ -231,7 +222,7 @@ if __name__ == '__main__':
 
     print_t('准备完成即将开始购票')
 
-    driver = webdriver.Chrome('/usr/local/Caskroom/chromedriver/80.0.3987.106/chromedriver')
+    driver = webdriver.Chrome('./chromedriver')
 
     print_t('开始进入登录页面')
     driver.get('https://kyfw.12306.cn/otn/resources/login.html')
@@ -328,10 +319,10 @@ if __name__ == '__main__':
                     set_seat_success = True
                     break
 
-    time.sleep(1)
+
     print_t('自动点击提交购票按钮')
     driver.find_element_by_id("submitOrder_id").click()
-    time.sleep(1)
+
     print_t('等待确认购买按钮加载完成')
     try:
         WebDriverWait(driver, 10, 0.1).until(
@@ -343,11 +334,11 @@ if __name__ == '__main__':
             print(e)
         driver.close()
         exit(1)
-    time.sleep(2)
+
     print_t('自动点击确认购买按钮')
     driver.find_element_by_id("qr_submit_id").click()
+
     input("完成购买！请在30分钟内登录账户，完成付款,点击Enter退出购票")
 
-    time.sleep(5)
     driver.close()
     exit(1)

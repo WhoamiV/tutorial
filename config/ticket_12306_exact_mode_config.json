@@ -1,12 +1,12 @@
 {
-  "username":"username",
-  "password":"password",
-  "from_station":"NJS",
-  "from_station_text":"南靖",
-  "to_station":"FYS",
-  "to_station_text":"福州南",
-  "travel_date":"'2019-02-02'",
-  "passenger_list":["宋超"],
-  "train_code":"D3167",
+  "username":"",
+  "password":"",
+  "from_station":"IZQ",
+  "from_station_text":"广州南",
+  "to_station":"YKQ",
+  "to_station_text":"郁南",
+  "travel_date":"'2020-04-13'",
+  "passenger_list":["谢惠连"],
+  "train_code":"D3620",
   "train_seat":["二等座","一等座"]
 }
