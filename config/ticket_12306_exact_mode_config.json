@@ -1,11 +1,11 @@
 {
-  "username":"",
+  "username":"465612025@qq.com",
   "password":"",
   "from_station":"IZQ",
   "from_station_text":"广州南",
   "to_station":"YKQ",
   "to_station_text":"郁南",
-  "travel_date":"'2020-04-13'",
+  "travel_date":"'2020-04-18'",
   "passenger_list":["谢惠连"],
   "train_code":"D3620",
   "train_seat":["二等座","一等座"]
