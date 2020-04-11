@@ -54,7 +54,7 @@ chaojiying = Chaojiying_Client('fantastyJ', 'viki1230.c', '904382')
 #     print(chaojiying.PostPic(im, 1902))												#1902 验证码类型  官方网站>>价格体系 3.4+版 print 后要加()
 
 if __name__ == '__main__':
-    chaojiying = Chaojiying_Client('fantastyJ', 'viki1230.c', '904382')
+    chaojiying = Chaojiying_Client('username', 'password', 'ID')
 
     im = open('pic/code.png', 'rb').read()
     result = chaojiying.PostPic(im, 9004)
